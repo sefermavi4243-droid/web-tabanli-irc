@@ -2,8 +2,6 @@
 
 Tarayıcıda çalışan, IRC tarzı gerçek zamanlı sohbet uygulaması. Kanallarda yazışma, özel mesaj, dosya paylaşımı ve görüntülü görüşme destekler.
 
-![Arayüz](Ekran%20Görüntüleri/Arayüz.png)
-
 ## Özellikler
 
 - Kayıt olma ve giriş (JWT ile)
