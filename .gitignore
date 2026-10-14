@@ -1,0 +1,10 @@
+node_modules/
+*.mp4
+*.db
+*.db-shm
+*.db-wal
+chatapp_final/backend/uploads/*
+chatapp_final/backend/certs/
+chatapp_final/docker/certs/
+*.pem
+.env

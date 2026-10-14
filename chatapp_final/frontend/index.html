@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Echo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>၊၊||၊</text></svg>">
+</head>
+<body>
+
+<!-- ── GİRİŞ ────────────────────────────────────── -->
+<div id="screen-auth" class="screen active">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-top">
+        <div class="auth-icon">၊၊||၊</div>
+        <h1>Echo</h1>
+        <p>Ders çalışma &amp; iletişim platformu</p>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-in"  onclick="authTab('in')">Giriş Yap</button>
+        <button class="auth-tab"        id="tab-reg" onclick="authTab('reg')">Kayıt Ol</button>
+      </div>
+
+      <!-- Giriş formu -->
+      <div id="form-in">
+        <input type="text"     id="in-user" placeholder="Kullanıcı adı" autocomplete="username" onkeydown="if(event.key==='Enter')login()">
+        <input type="password" id="in-pass" placeholder="Şifre"         autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+        <button class="btn-primary" onclick="login()">Giriş Yap</button>
+      </div>
+
+      <!-- Kayıt formu -->
+      <div id="form-reg" class="hidden">
+        <input type="text"     id="reg-user" placeholder="Kullanıcı adı (harf, rakam, _)" autocomplete="username">
+        <input type="text"     id="reg-name" placeholder="Görünen isim (isteğe bağlı)">
+        <input type="password" id="reg-pass" placeholder="Şifre (min. 6)" autocomplete="new-password">
+        <input type="password" id="reg-pass2" placeholder="Şifre tekrar" autocomplete="new-password" onkeydown="if(event.key==='Enter')register()">
+        <button class="btn-primary" onclick="register()">Hesap Oluştur</button>
+      </div>
+
+      <div id="auth-err" class="auth-err hidden"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ANA UYGULAMA ─────────────────────────────── -->
+<div id="screen-app" class="screen">
+
+  <!-- Sol: Kanallar -->
+  <aside id="sidebar">
+    <div class="sb-top">
+      <div class="sb-title">၊၊||၊ Echo</div>
+      <div class="sb-top-right">
+        <div id="conn-dot" class="conn-dot" title="Bağlantı"></div>
+        <button class="sb-close" id="sb-close" onclick="closeSB()">✕</button>
+      </div>
+    </div>
+
+    <input type="text" class="sb-search" placeholder="🔍 Ara..." oninput="filterRooms(this.value)">
+
+    <div id="room-list" class="room-list"></div>
+
+    <!-- Alt kullanıcı kartı -->
+    <div class="sb-me">
+      <div class="sb-me-left" onclick="openMyProfile()">
+        <div class="av av36" id="me-av">?</div>
+        <div>
+          <div class="sb-me-name" id="me-name">—</div>
+          <div class="sb-me-status">● çevrimiçi</div>
+        </div>
+      </div>
+      <div class="sb-me-btns">
+        <button title="Ayarlar" onclick="openSettings()">⚙️</button>
+        <button title="Çıkış"   onclick="logout()">🚪</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Orta: Mesajlaşma -->
+  <main id="chat">
+    <div id="chat-top">
+      <button id="burger" onclick="openSB()">☰</button>
+      <span id="chat-prefix" class="chat-prefix">#</span>
+      <strong id="chat-name">Kanal seçin</strong>
+      <span class="chat-sep" id="chat-sep"></span>
+      <span id="chat-desc" class="chat-desc"></span>
+      <div id="chat-actions"></div>
+    </div>
+
+    <div id="messages"></div>
+
+    <div id="typing-bar" class="typing-bar" style="display:none">
+      <span class="typing-dots"><b></b><b></b><b></b></span>
+      <span id="typing-who"></span>
+    </div>
+
+    <div id="reply-bar" class="reply-bar hidden">
+      <span class="reply-icon">↩</span>
+      <span id="reply-to-name" class="reply-name"></span>
+      <span id="reply-to-text" class="reply-text"></span>
+      <button onclick="cancelReply()">✕</button>
+    </div>
+
+    <div id="input-row">
+      <button id="btn-file"  class="ib" onclick="document.getElementById('file-inp').click()" disabled title="Dosya">📎</button>
+      <input type="file" id="file-inp" hidden multiple onchange="uploadAndSend(this)">
+      <button id="btn-emoji" class="ib" onclick="toggleEmoji(this)" disabled title="Emoji">😊</button>
+      <input  id="msg-inp" type="text" placeholder="Bir kanal seçin..." disabled
+        oninput="onTyping()" onkeydown="onKey(event)">
+      <button id="btn-send" onclick="sendMsg()" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M2 21L23 12 2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </main>
+
+  <!-- Sağ: Kullanıcılar -->
+  <aside id="right">
+    <div class="right-section-title">ÇEVRİMİÇİ — <span id="online-count">0</span></div>
+    <div id="online-list"></div>
+    <div class="right-section-title" style="margin-top:.5rem">DİĞER KULLANICILAR</div>
+    <div id="offline-list"></div>
+  </aside>
+</div>
+
+<!-- ── OVERLAY: Emoji ────────────────────────────── -->
+<div id="emoji-box" class="emoji-box hidden"></div>
+
+<!-- ── OVERLAY: Context menü ────────────────────── -->
+<div id="ctx" class="ctx hidden">
+  <button onclick="ctxReply()">↩ Yanıtla</button>
+  <button id="ctx-edit" onclick="ctxEdit()">✏️ Düzenle</button>
+  <button id="ctx-del" onclick="ctxDel()" class="ctx-red">🗑️ Sil</button>
+</div>
+
+<!-- ── OVERLAY: Profil ──────────────────────────── -->
+<div id="modal-profile" class="modal hidden">
+  <div class="modal-bg" onclick="closeModal('modal-profile')"></div>
+  <div class="modal-box profile-box">
+    <button class="modal-x" onclick="closeModal('modal-profile')">✕</button>
+    <div class="profile-banner"></div>
+    <div class="profile-av-row">
+      <div class="profile-av-wrap">
+        <div class="av av80" id="pr-av">?</div>
+        <button id="pr-av-btn" class="pr-av-btn hidden" onclick="document.getElementById('av-inp').click()" title="Avatar değiştir">📷</button>
+        <input type="file" id="av-inp" hidden accept="image/*" onchange="uploadAvatar(this)">
+      </div>
+      <div id="pr-actions" class="pr-actions"></div>
+    </div>
+    <div class="profile-info">
+      <div class="pr-name" id="pr-name">—</div>
+      <div class="pr-tag"  id="pr-tag">—</div>
+    </div>
+    <div class="profile-card">
+      <div class="pc-label">HAKKIMDA</div>
+      <div class="pc-bio"  id="pr-bio">—</div>
+      <div class="pc-label" style="margin-top:.75rem">ÜYE OLDU</div>
+      <div class="pc-since" id="pr-since">—</div>
+    </div>
+    <div id="pr-edit" class="pr-edit hidden">
+      <div class="pr-edit-title">PROFİLİ DÜZENLE</div>
+      <label>Görünen İsim</label>
+      <input type="text" id="pr-edit-name" placeholder="İsim Soyisim">
+      <label>Hakkımda</label>
+      <textarea id="pr-edit-bio" rows="3" placeholder="Kendinizden bahsedin..."></textarea>
+      <div class="pr-edit-btns">
+        <button class="btn-primary" onclick="saveProfile()">Kaydet</button>
+        <button class="btn-sec" onclick="document.getElementById('pr-edit').classList.add('hidden')">İptal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OVERLAY: Kanal oluştur ────────────────────── -->
+<div id="modal-room" class="modal hidden">
+  <div class="modal-bg" onclick="closeModal('modal-room')"></div>
+  <div class="modal-box">
+    <button class="modal-x" onclick="closeModal('modal-room')">✕</button>
+    <h3>Yeni Kanal</h3>
+    <label>Kategori</label>
+    <select id="new-cat">
+      <option>Genel</option><option>Ders</option><option>Projeler</option><option>Diğer</option>
+    </select>
+    <label>Kanal Adı</label>
+    <div class="room-name-row">
+      <span>#</span>
+      <input id="new-name" type="text" placeholder="kanal-adi" onkeydown="if(event.key==='Enter')createRoom()">
+    </div>
+    <label>Açıklama</label>
+    <input id="new-desc" type="text" placeholder="Bu kanal hakkında...">
+    <div class="modal-btns">
+      <button class="btn-sec"     onclick="closeModal('modal-room')">İptal</button>
+      <button class="btn-primary" onclick="createRoom()">Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── OVERLAY: Ayarlar ──────────────────────────── -->
+<div id="modal-settings" class="modal hidden">
+  <div class="modal-bg" onclick="closeModal('modal-settings')"></div>
+  <div class="modal-box">
+    <button class="modal-x" onclick="closeModal('modal-settings')">✕</button>
+    <h3>⚙️ Ayarlar</h3>
+    <div class="setting-row">
+      <span>🔔 Bildirim Sesi</span>
+      <label class="toggle"><input type="checkbox" id="s-sound" onchange="saveSetting('sound',this.checked)"><span class="tog"></span></label>
+    </div>
+    <div class="setting-row">
+      <span>🌙 Karanlık Mod</span>
+      <label class="toggle"><input type="checkbox" id="s-dark" checked onchange="toggleDark(this.checked)"><span class="tog"></span></label>
+    </div>
+    <div class="setting-row">
+      <span>🖥️ Masaüstü Bildirimleri</span>
+      <label class="toggle"><input type="checkbox" id="s-notif" onchange="askNotif(this)"><span class="tog"></span></label>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--bd);margin:.75rem 0">
+    <div style="font-size:.8rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Engellenen Kullanicilar</div>
+    <div id="block-list-settings" class="block-list-wrap"></div>
+  </div>
+</div>
+
+<!-- ── WebRTC: Görüşme (1-1 ve Grup) ─────────────────── -->
+<div id="call-screen" class="call-screen hidden">
+  <video id="vid-remote" autoplay playsinline class="vid-main"></video>
+  <div id="group-grid" class="group-grid hidden"></div>
+  <video id="vid-local" autoplay playsinline muted class="vid-local"></video>
+  <div class="call-info">
+    <div class="call-av" id="call-av">?</div>
+    <div>
+      <div id="call-who" class="call-who">—</div>
+      <div id="call-status" class="call-status">Bağlanıyor...</div>
+    </div>
+    <div id="call-timer" class="call-timer">0:00</div>
+  </div>
+  <div class="call-btns">
+    <button class="cb" id="cb-mic" onclick="toggleMic()" title="Mikrofon">🎙️</button>
+    <button class="cb" id="cb-cam" onclick="toggleCam()" title="Kamera">📹</button>
+    <button class="cb cb-end" onclick="endCall()" title="Görüşmeyi Bitir">📵</button>
+  </div>
+</div>
+
+<!-- ── WebRTC: Gelen Arama ───────────────────────── -->
+<div id="incoming" class="incoming hidden">
+  <div class="inc-card">
+    <div class="av av64" id="inc-av">?</div>
+    <div class="inc-name" id="inc-name">—</div>
+    <div class="inc-sub" id="inc-sub">görüntülü aramaya davet ediyor</div>
+    <div class="inc-btns">
+      <button class="inc-accept" onclick="acceptCall()">✅ Kabul</button>
+      <button class="inc-reject" onclick="rejectCall()">❌ Reddet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ─────────────────────────────────────── -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

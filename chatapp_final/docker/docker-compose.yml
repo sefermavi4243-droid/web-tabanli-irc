@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+
+  # Ana uygulama
+  nexus:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: nexus-app
+    restart: unless-stopped
+    environment:
+      - JWT_SECRET=GIZLI_ANAHTAR_DEGISTIRIN
+      - DB_PATH=/data/nexus.db
+      - USE_HTTPS=false
+    volumes:
+      - nexus_data:/data
+    networks:
+      - nexus-net
+
+  # Nginx - HTTPS + ters proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nexus-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - nexus
+    networks:
+      - nexus-net
+
+  # coturn - TURN sunucusu (WebRTC NAT geçişi)
+  coturn:
+    image: coturn/coturn:alpine
+    container_name: nexus-turn
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+    command: -c /etc/coturn/turnserver.conf
+
+volumes:
+  nexus_data:
+
+networks:
+  nexus-net:
+    driver: bridge
